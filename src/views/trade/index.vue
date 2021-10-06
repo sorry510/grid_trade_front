@@ -6,77 +6,122 @@
       element-loading-text="Loading"
       border
       fit
+      size="mini"
       highlight-current-row
     >
-      <el-table-column align="center" label="ID" width="95">
+      <el-table-column align="center" label="ID" width="65">
         <template slot-scope="scope">
-          {{ scope.$index }}
+          {{ scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column label="币种" align="center">
+      <el-table-column
+        label="币种"
+        align="center"
+        width="100"
+        show-overflow-tooltip
+      >
         <template slot-scope="scope">
           {{ scope.row.symbol }}
         </template>
       </el-table-column>
-      <el-table-column label="交易数量" align="center">
+      <el-table-column
+        label="交易数量"
+        align="center"
+        width="70"
+        show-overflow-tooltip
+      >
         <template slot-scope="scope">
           <span>{{ scope.row.quantity }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="止盈率" align="center">
-        <template slot-scope="scope"> {{ scope.row.rate }} % </template>
+      <el-table-column
+        label="止盈率"
+        align="center"
+        width="70"
+        show-overflow-tooltip
+      >
+        <template slot-scope="scope"> {{ scope.row.rate }}% </template>
       </el-table-column>
-      <el-table-column label="买入价格" align="center">
+      <el-table-column label="买单价" align="center" show-overflow-tooltip>
         <template slot-scope="scope">
           {{ scope.row.buy_price }}
         </template>
       </el-table-column>
-      <el-table-column label="卖出价格" align="center">
+      <el-table-column label="卖单价" align="center" show-overflow-tooltip>
         <template slot-scope="scope">
           {{ scope.row.sell_price }}
         </template>
       </el-table-column>
-      <el-table-column label="当前拥有数量" align="center">
+      <el-table-column
+        label="当前数量"
+        align="center"
+        width="70"
+        show-overflow-tooltip
+      >
         <template slot-scope="scope">
           {{ scope.row.buy_quantity }}
         </template>
       </el-table-column>
       <el-table-column type="expand" label="交易记录" align="center" width="80">
         <template slot-scope="{ row }">
-          <el-table :data="row.history_trade" fit highlight-current-row>
-            <el-table-column align="center" label="ID" width="95">
+          <el-table
+            :data="row.history_trade"
+            border
+            fit
+            size="mini"
+            highlight-current-row
+          >
+            <el-table-column align="center" label="ID" width="65">
               <template slot-scope="scope">
-                {{ scope.$index }}
+                {{ scope.$index + 1 }}
               </template>
             </el-table-column>
-            <el-table-column label="币种" align="center">
+            <!-- <el-table-column
+              label="币种"
+              align="center"
+              width="100"
+              show-overflow-tooltip
+            >
               <template slot-scope="{ row }">
                 {{ row.symbol }}
               </template>
-            </el-table-column>
-            <el-table-column label="交易数量" align="center">
+            </el-table-column> -->
+            <el-table-column
+              label="交易数量"
+              align="center"
+              width="75"
+              show-overflow-tooltip
+            >
               <template slot-scope="{ row }">
                 {{ row.quantity }}
               </template>
             </el-table-column>
-            <el-table-column label="交易价格" align="center">
+            <el-table-column
+              label="交易价格"
+              align="center"
+              show-overflow-tooltip
+            >
               <template slot-scope="{ row }">
                 {{ row.price }}
               </template>
             </el-table-column>
-            <el-table-column label="交易方向" align="center">
+            <el-table-column label="交易方向" align="center" width="75">
               <template slot-scope="{ row }">
                 {{ row.side === 'BUY' ? '买入' : '卖出' }}
               </template>
             </el-table-column>
-            <el-table-column label="交易时间" align="center">
+            <el-table-column label="已卖出" align="center" width="65">
+              <template slot-scope="{ row }">
+                <span v-if="row.isSell === true" style="color: green">是</span>
+                <span v-else-if="row.isSell === false" style="color: red"
+                  >否
+                </span>
+                <span v-else>-</span>
+              </template></el-table-column
+            >
+            <el-table-column label="交易时间" align="center" width="140">
               <template slot-scope="{ row }">
                 {{ row.time }}
-              </template>
-            </el-table-column>
-            <el-table-column label="是否已卖出" align="center">
-              <template slot-scope="{ row }">
-                {{ row.isSell === true ? '是' : '否' }}
               </template>
             </el-table-column>
           </el-table>

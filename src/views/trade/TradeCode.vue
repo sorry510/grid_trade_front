@@ -106,16 +106,23 @@ export default {
     async save() {
       this.$confirm(`此操作不可恢复，确认要保存吗？`)
         .then(() => {
+          let trades
           try {
-            ;(async () => {
+            trades = JSON.parse(this.code)
+          } catch (e) {
+            this.$message({ message: 'json格式不正确，请检查', type: 'error' })
+            return
+          }
+          ;(async () => {
+            try {
               await setTrades({
-                trades: JSON.parse(this.code),
+                trades,
               })
               this.$message({ message: '修改成功', type: 'success' })
-            })()
-          } catch (e) {
-            this.$message({ message: '修改失败', type: 'error' })
-          }
+            } catch (e) {
+              this.$message({ message: '网络错误，修改失败', type: 'error' })
+            }
+          })()
         })
         .catch(() => {})
     },
