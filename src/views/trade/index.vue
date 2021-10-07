@@ -27,7 +27,7 @@
       <el-table-column
         label="交易数量"
         align="center"
-        width="70"
+        width="80"
         show-overflow-tooltip
       >
         <template slot-scope="scope">
@@ -55,13 +55,37 @@
       <el-table-column
         label="当前数量"
         align="center"
-        width="70"
+        width="80"
         show-overflow-tooltip
       >
         <template slot-scope="scope">
           {{ scope.row.buy_quantity }}
         </template>
       </el-table-column>
+      <el-table-column
+        label="当前收益"
+        align="center"
+        width="80"
+        show-overflow-tooltip
+      >
+        <template slot-scope="scope">
+          {{ nowProfit(scope.row.history_trade) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="止损率" align="center" width="80">
+        <template slot-scope="scope">
+          {{ scope.row.stop_loss || '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="开启" align="center" width="80">
+        <template slot-scope="{ row }">
+          <el-switch
+            v-model="row.open"
+            active-color="#13ce66"
+            inactive-color="#dcdfe6"
+            @change="isStop($event, row)"
+          /> </template
+      ></el-table-column>
       <el-table-column type="expand" label="交易记录" align="center" width="80">
         <template slot-scope="{ row }">
           <el-table
@@ -89,7 +113,7 @@
             <el-table-column
               label="交易数量"
               align="center"
-              width="75"
+              width="80"
               show-overflow-tooltip
             >
               <template slot-scope="{ row }">
@@ -110,6 +134,20 @@
                 {{ row.side === 'BUY' ? '买入' : '卖出' }}
               </template>
             </el-table-column>
+            <el-table-column
+              label="预计卖价"
+              align="center"
+              show-overflow-tooltip
+            >
+              <template slot-scope="{ row }">
+                {{ row.sell_price || '-' }}
+              </template>
+            </el-table-column>
+            <el-table-column label="收益" align="center" show-overflow-tooltip>
+              <template slot-scope="{ row }">
+                {{ row.profit ? round(row.profit || 0) : '-' }}
+              </template></el-table-column
+            >
             <el-table-column label="已卖出" align="center" width="65">
               <template slot-scope="{ row }">
                 <span v-if="row.isSell === true" style="color: green">是</span>
@@ -117,6 +155,11 @@
                   >否
                 </span>
                 <span v-else>-</span>
+              </template></el-table-column
+            >
+            <el-table-column label="止损率" align="center" width="65">
+              <template slot-scope="{ row }">
+                {{ row.side === 'BUY' ? `${row.stop_loss || 0}%` : '-' }}
               </template></el-table-column
             >
             <el-table-column label="交易时间" align="center" width="140">
@@ -132,33 +175,59 @@
 </template>
 
 <script>
-import { getTrades } from '@/api/trade'
+import { getTrades, setTrades } from '@/api/trade'
+import { round } from 'mathjs'
 
 export default {
-  filters: {
-    statusFilter(status) {
-      const statusMap = {
-        published: 'success',
-        draft: 'gray',
-        deleted: 'danger',
-      }
-      return statusMap[status]
-    },
-  },
   data() {
     return {
       list: null,
       listLoading: true,
+      timeId: null,
     }
   },
   created() {
     this.fetchData()
+    this.timeId = setInterval(() => this.fetchData(), 30 * 1000)
   },
   methods: {
     async fetchData() {
       this.listLoading = true
       const { data } = await getTrades()
       this.list = data.list
+      this.listLoading = false
+    },
+    async eidt() {
+      await setTrades({
+        trades: this.list,
+      })
+    },
+    // 当前收益
+    nowProfit(orders) {
+      return round(
+        orders
+          .filter((item) => item.side === 'SELL')
+          .reduce((carry, item) => carry + Number(item.profit || 0), 0),
+        2
+      )
+    },
+    // 当前未卖出的损失（不知道现在价格，暂不做）
+    nowLoss(orders) {
+      return orders.filter(
+        (item) => item.side === 'SELL' && item.isSell === false
+      )
+    },
+    round(data) {
+      return round(data)
+    },
+    async isStop(event, row) {
+      this.listLoading = true
+      try {
+        await setTrades({
+          trades: this.list,
+        })
+        this.$message({ message: '修改成功', type: 'success' })
+      } catch (e) {}
       this.listLoading = false
     },
   },
