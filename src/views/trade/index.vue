@@ -85,7 +85,7 @@
             >
             <el-table-column label="收益" align="center" show-overflow-tooltip>
               <template slot-scope="{ row }">
-                {{ row.profit ? round(row.profit || 0) : '-' }}
+                {{ row.profit ? round(row.profit, 2) : '-' }}
               </template></el-table-column
             >
             <el-table-column
@@ -146,7 +146,7 @@
         show-overflow-tooltip
       >
         <template slot-scope="scope">
-          {{ scope.row.buy_quantity }}
+          {{ round(scope.row.buy_quantity, 4) }}
         </template>
       </el-table-column>
       <el-table-column
@@ -229,8 +229,8 @@ export default {
         (item) => item.side === 'SELL' && item.isSell === false
       )
     },
-    round(data) {
-      return round(data)
+    round(data, num = 2) {
+      return round(data, num)
     },
     async isStop(event, row, field = null) {
       if (event === true && field) {
