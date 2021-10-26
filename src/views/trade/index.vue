@@ -1,5 +1,32 @@
 <template>
   <div class="app-container">
+    <div style="margin-bottom: 10px">
+      <span style="margin-right: 10px">
+        总收益：
+        <span style="color: green">{{ allProfit }}</span>
+        usdt
+      </span>
+      <el-button v-if="buyAll" type="text" @click="changeBuyALL(true)">
+        开启所有买单
+      </el-button>
+      <el-button v-else type="text" @click="changeBuyALL(false)">
+        关闭所有买单
+      </el-button>
+      <el-button v-if="sellAll" type="text" @click="changeSellALL(true)">
+        开启所有卖单
+      </el-button>
+      <el-button v-else type="text" @click="changeSellALL(false)">
+        关闭所有卖单
+      </el-button>
+      <el-button
+        type="primary"
+        size="mini"
+        :loading="listLoading"
+        @click="fetchData()"
+      >
+        刷新
+      </el-button>
+    </div>
     <el-table
       v-loading="listLoading"
       :data="list"
@@ -122,6 +149,18 @@
         </template>
       </el-table-column>
       <el-table-column
+        label="当前数量"
+        align="center"
+        width="80"
+        show-overflow-tooltip
+      >
+        <template slot-scope="scope">
+          <span style="color: green">
+            {{ round(scope.row.buy_quantity, 4) }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column
         label="收益率"
         align="center"
         width="70"
@@ -137,16 +176,6 @@
       <el-table-column label="卖单价" align="center" show-overflow-tooltip>
         <template slot-scope="scope">
           {{ scope.row.sell_price }}
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="当前数量"
-        align="center"
-        width="80"
-        show-overflow-tooltip
-      >
-        <template slot-scope="scope">
-          {{ round(scope.row.buy_quantity, 4) }}
         </template>
       </el-table-column>
       <el-table-column
@@ -170,7 +199,7 @@
             v-model="row.buy_open"
             active-color="#13ce66"
             inactive-color="#dcdfe6"
-            @change="isStop($event, row, 'buy_price')"
+            @change="isChangeBuy($event, row)"
           /> </template
       ></el-table-column>
       <el-table-column label="卖单开启" align="center" width="80">
@@ -179,7 +208,7 @@
             v-model="row.sell_open"
             active-color="#13ce66"
             inactive-color="#dcdfe6"
-            @change="isStop($event, row)"
+            @change="isChangeSell($event, row)"
           /> </template
       ></el-table-column>
     </el-table>
@@ -193,26 +222,45 @@ import { round } from 'mathjs'
 export default {
   data() {
     return {
-      list: null,
+      list: [],
       listLoading: true,
       timeId: null,
+      buyAll: true,
+      sellAll: true,
     }
+  },
+  computed: {
+    allProfit() {
+      const profit = this.list.reduce(
+        (carry, row) => carry + this.nowProfit(row.history_trade || []),
+        0
+      )
+      return round(profit, 2)
+    },
   },
   created() {
     this.fetchData()
-    this.timeId = setInterval(() => this.fetchData(), 120 * 1000)
+    this.timeId = setInterval(() => this.fetchData(), 60 * 5 * 1000)
   },
   methods: {
     async fetchData() {
       this.listLoading = true
       const { data } = await getTrades()
       this.list = data.list
+      this.buyAll = !!this.list.find((item) => item.buy_open === false)
+      this.sellAll = !!this.list.find((item) => item.sell_open === false)
       this.listLoading = false
     },
-    async eidt() {
-      await setTrades({
-        trades: this.list,
-      })
+    async edit() {
+      try {
+        await setTrades({
+          trades: this.list,
+        })
+        this.$message({ message: '修改成功', type: 'success' })
+        await this.fetchData()
+      } catch (e) {
+        this.$message({ message: '修改失败', type: 'success' })
+      }
     },
     // 当前收益
     nowProfit(orders) {
@@ -232,22 +280,62 @@ export default {
     round(data, num = 2) {
       return round(data, num)
     },
-    async isStop(event, row, field = null) {
-      if (event === true && field) {
-        // 重新开启的时候，买的价格定为0，重新开始生成
-        const find = this.list.find((item) => item.symbol === row.symbol)
-        if (find) {
-          find[field] = 0
-        }
+    async isChangeBuy(event, row) {
+      await this.fetchData()
+      const find = this.list.find((item) => item.symbol === row.symbol)
+      if (event === true) {
+        // 重新开启的时候，买的价格定为0，重新开始生成新的价格
+        find.buy_price = 0
+        find.buy_open = true
+      } else {
+        find.buy_open = false
       }
-      this.listLoading = true
-      try {
-        await setTrades({
-          trades: this.list,
+      await this.edit()
+    },
+    async isChangeSell(event, row) {
+      await this.fetchData()
+      const find = this.list.find((item) => item.symbol === row.symbol)
+      find.sell_open = event
+      await this.edit()
+    },
+    async changeBuyALL(status) {
+      this.$confirm(`确认要进行此操作吗？`)
+        .then(async () => {
+          await this.fetchData()
+          this.list.map((item) => {
+            item.buy_open = status
+            if (status === true) {
+              item.buy_price = 0
+            }
+          })
+          await this.edit()
         })
-        this.$message({ message: '修改成功', type: 'success' })
-      } catch (e) {}
-      this.listLoading = false
+        .catch(() => {})
+    },
+    async changeSellALL(status) {
+      this.$confirm(`确认要进行此操作吗？`)
+        .then(async () => {
+          await this.fetchData()
+          this.list.map((item) => (item.sell_open = status))
+          await this.edit()
+        })
+        .catch(() => {})
+    },
+    getSummaries(param) {
+      const { columns, data } = param
+      return columns.map((column, index) => {
+        if (index === 0) {
+          return '总和'
+        }
+        if (column.label === '当前收益') {
+          return data.reduce(
+            (carry, row) => carry + this.nowProfit(row.history_trade),
+            0
+          )
+        } else {
+          return '-'
+        }
+      })
     },
   },
 }
