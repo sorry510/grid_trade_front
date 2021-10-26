@@ -34,7 +34,10 @@
       border
       fit
       size="mini"
+      :row-key="rowKey"
+      :expand-row-keys="expandKeys"
       highlight-current-row
+      @expand-change="expandChange"
     >
       <!-- <el-table-column align="center" label="ID" width="65">
         <template slot-scope="scope">
@@ -104,17 +107,21 @@
             <el-table-column label="已卖出" align="center" width="65">
               <template slot-scope="{ row }">
                 <span v-if="row.isSell === true" style="color: green">是</span>
-                <span v-else-if="row.isSell === false" style="color: red"
-                  >否
+                <span
+                  v-else-if="row.isSell === false"
+                  style="color: red"
+                >否
                 </span>
                 <span v-else>-</span>
-              </template></el-table-column
-            >
+              </template></el-table-column>
+            <el-table-column label="当前收益" align="center" show-overflow-tooltip>
+              <template slot-scope="{ row }">
+                {{ nowBuyTradeProfit(row, tickets) }}
+              </template></el-table-column>
             <el-table-column label="收益" align="center" show-overflow-tooltip>
               <template slot-scope="{ row }">
                 {{ row.profit ? round(row.profit, 2) : '-' }}
-              </template></el-table-column
-            >
+              </template></el-table-column>
             <el-table-column
               label="预计卖价"
               align="center"
@@ -125,11 +132,10 @@
               </template>
             </el-table-column>
 
-            <el-table-column label="止损率" align="center" width="65">
+            <!-- <el-table-column label="止损率" align="center" width="65">
               <template slot-scope="{ row }">
                 {{ row.side === 'BUY' ? `${row.stop_loss || 0}%` : '-' }}
-              </template></el-table-column
-            >
+              </template></el-table-column> -->
             <el-table-column label="交易时间" align="center" width="140">
               <template slot-scope="{ row }">
                 {{ row.time }}
@@ -168,6 +174,11 @@
       >
         <template slot-scope="scope"> {{ scope.row.rate }}% </template>
       </el-table-column>
+      <el-table-column label="当前价格" align="center" show-overflow-tooltip>
+        <template slot-scope="scope">
+          {{ tickets[scope.row.symbol] || '未知' }}
+        </template>
+      </el-table-column>
       <el-table-column label="买单价" align="center" show-overflow-tooltip>
         <template slot-scope="scope">
           {{ scope.row.buy_price }}
@@ -185,14 +196,14 @@
         show-overflow-tooltip
       >
         <template slot-scope="scope">
-          {{ nowProfit(scope.row.history_trade) }}
+          {{ scope.row.nowProfit || 0 }}
         </template>
       </el-table-column>
-      <el-table-column label="止损率" align="center" width="80">
+      <!-- <el-table-column label="止损率" align="center" width="80">
         <template slot-scope="scope">
           {{ scope.row.stop_loss || '-' }}
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="买单开启" align="center" width="80">
         <template slot-scope="{ row }">
           <el-switch
@@ -200,8 +211,7 @@
             active-color="#13ce66"
             inactive-color="#dcdfe6"
             @change="isChangeBuy($event, row)"
-          /> </template
-      ></el-table-column>
+          /> </template></el-table-column>
       <el-table-column label="卖单开启" align="center" width="80">
         <template slot-scope="{ row }">
           <el-switch
@@ -209,40 +219,51 @@
             active-color="#13ce66"
             inactive-color="#dcdfe6"
             @change="isChangeSell($event, row)"
-          /> </template
-      ></el-table-column>
+          /> </template></el-table-column>
     </el-table>
   </div>
 </template>
 
 <script>
-import { getTrades, setTrades } from '@/api/trade'
+import { getTrades, setTrades, getTickets } from '@/api/trade'
 import { round } from 'mathjs'
 
 export default {
   data() {
     return {
       list: [],
+      tickets: {},
       listLoading: true,
       timeId: null,
       buyAll: true,
       sellAll: true,
+      rowKey(row) {
+        return row.symbol;
+      },
+      expandKeys: []
     }
   },
   computed: {
     allProfit() {
       const profit = this.list.reduce(
-        (carry, row) => carry + this.nowProfit(row.history_trade || []),
+        (carry, row) => carry + row.nowProfit,
         0
       )
       return round(profit, 2)
     },
   },
-  created() {
-    this.fetchData()
-    this.timeId = setInterval(() => this.fetchData(), 60 * 5 * 1000)
+  async created() {
+    await this.fetchData()
+    this.fetchTickets()
+    this.timeId = setInterval(() => this.fetchTickets(), 30 * 1000)
+  },
+  beforeDestroy() {
+    clearInterval(this.timeId)
   },
   methods: {
+    expandChange(row, expandedRows) {
+      this.expandKeys = expandedRows.map(item => item.symbol)
+    },
     async fetchData() {
       this.listLoading = true
       const { data } = await getTrades()
@@ -250,6 +271,18 @@ export default {
       this.buyAll = !!this.list.find((item) => item.buy_open === false)
       this.sellAll = !!this.list.find((item) => item.sell_open === false)
       this.listLoading = false
+    },
+    async fetchTickets() {
+      const { data } = await getTickets()
+      const result = {}
+      data.forEach(item => {
+        result[item.symbol] = Number(item.price)
+      })
+      this.tickets = result
+      this.list = this.list.map(item => {
+        item.nowProfit = this.nowProfit(item) // 当前收益
+        return item;
+      })
     },
     async edit() {
       try {
@@ -263,19 +296,31 @@ export default {
       }
     },
     // 当前收益
-    nowProfit(orders) {
-      return round(
-        orders
+    nowProfit(ticket) {
+      const { history_trade = [], symbol } = ticket
+      const sellProfit = round(
+        history_trade
           .filter((item) => item.side === 'SELL')
           .reduce((carry, item) => carry + Number(item.profit || 0), 0),
         2
       )
+      const nowPrice = this.tickets[symbol]
+      if (nowPrice) {
+        // 尚未交易的收益
+        const noSellProfit = history_trade
+          .filter((item) => item.side === 'BUY' && item.isSell === false)
+          .reduce((carry, item) => carry + (nowPrice - Number(item.price)) * item.quantity, 0)
+        console.log(symbol, noSellProfit)
+        return round(sellProfit + noSellProfit, 2)
+      }
+      return sellProfit
     },
-    // 当前未卖出的损失（不知道现在价格，暂不做）
-    nowLoss(orders) {
-      return orders.filter(
-        (item) => item.side === 'SELL' && item.isSell === false
-      )
+    nowBuyTradeProfit(order, tickets) {
+      const nowPrice = tickets[order.symbol]
+      if (nowPrice && order.side === 'BUY' && order.isSell === false) {
+        return round((nowPrice - Number(order.price)) * order.quantity, 2)
+      }
+      return '-'
     },
     round(data, num = 2) {
       return round(data, num)
@@ -300,7 +345,7 @@ export default {
     },
     async changeBuyALL(status) {
       this.$confirm(`确认要进行此操作吗？`)
-        .then(async () => {
+        .then(async() => {
           await this.fetchData()
           this.list.map((item) => {
             item.buy_open = status
@@ -314,29 +359,13 @@ export default {
     },
     async changeSellALL(status) {
       this.$confirm(`确认要进行此操作吗？`)
-        .then(async () => {
+        .then(async() => {
           await this.fetchData()
           this.list.map((item) => (item.sell_open = status))
           await this.edit()
         })
         .catch(() => {})
-    },
-    getSummaries(param) {
-      const { columns, data } = param
-      return columns.map((column, index) => {
-        if (index === 0) {
-          return '总和'
-        }
-        if (column.label === '当前收益') {
-          return data.reduce(
-            (carry, row) => carry + this.nowProfit(row.history_trade),
-            0
-          )
-        } else {
-          return '-'
-        }
-      })
-    },
+    }
   },
 }
 </script>

@@ -1,10 +1,10 @@
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 export function getTrades() {
   return request({
     url: '/trades',
-    method: 'get',
-  })
+    method: 'get'
+  });
 }
 
 export function setTrades(data) {
@@ -12,7 +12,14 @@ export function setTrades(data) {
     url: '/trades',
     method: 'put',
     data
-  })
+  });
+}
+
+export function getTickets() {
+  return request({
+    url: '/symbol/price',
+    method: 'get'
+  });
 }
 
 // export function getConfig() {
