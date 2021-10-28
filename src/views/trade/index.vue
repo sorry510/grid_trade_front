@@ -145,16 +145,6 @@
         </template>
       </el-table-column>
       <el-table-column
-        label="交易数量"
-        align="center"
-        width="80"
-        show-overflow-tooltip
-      >
-        <template slot-scope="scope">
-          <span>{{ scope.row.quantity }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column
         label="当前数量"
         align="center"
         width="80"
@@ -167,6 +157,26 @@
         </template>
       </el-table-column>
       <el-table-column
+        label="当前收益"
+        align="center"
+        width="80"
+        show-overflow-tooltip
+      >
+        <template slot-scope="scope">
+          {{ scope.row.nowProfit || 0 }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="交易数量"
+        align="center"
+        width="80"
+        show-overflow-tooltip
+      >
+        <template slot-scope="scope">
+          <span>{{ scope.row.quantity }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
         label="收益率"
         align="center"
         width="70"
@@ -176,7 +186,7 @@
       </el-table-column>
       <el-table-column label="当前价格" align="center" show-overflow-tooltip>
         <template slot-scope="scope">
-          {{ tickets[scope.row.symbol] || '未知' }}
+          <span style="color: red;">{{ tickets[scope.row.symbol] || '未知' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="买单价" align="center" show-overflow-tooltip>
@@ -187,16 +197,6 @@
       <el-table-column label="卖单价" align="center" show-overflow-tooltip>
         <template slot-scope="scope">
           {{ scope.row.sell_price }}
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="当前收益"
-        align="center"
-        width="80"
-        show-overflow-tooltip
-      >
-        <template slot-scope="scope">
-          {{ scope.row.nowProfit || 0 }}
         </template>
       </el-table-column>
       <!-- <el-table-column label="止损率" align="center" width="80">
