@@ -1,24 +1,26 @@
-import request from '@/utils/request';
+import request from "@/utils/request";
 
-export function getTrades() {
+export function getFeatures(query = {}) {
   return request({
-    url: '/trades',
-    method: 'get'
+    url: "/features",
+    method: "get",
+    params: query
   });
 }
 
-export function setTrades(data) {
+export function setFeature(id, data) {
   return request({
-    url: '/trades',
-    method: 'put',
+    url: `/features/${id}`,
+    method: "put",
     data
   });
 }
 
-export function getTickets() {
+export function addFeature(data) {
   return request({
-    url: '/symbol/price',
-    method: 'get'
+    url: `/features`,
+    method: "post",
+    data
   });
 }
 
@@ -28,3 +30,17 @@ export function getTickets() {
 //     method: 'get',
 //   })
 // }
+
+export function startService() {
+  return request({
+    url: "/start",
+    method: "post"
+  });
+}
+
+export function stopService() {
+  return request({
+    url: "/stop",
+    method: "post"
+  });
+}

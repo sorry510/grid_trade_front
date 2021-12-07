@@ -56,19 +56,19 @@ export const constantRoutes = [
       }
     ]
   },
-  {
-    path: "/trade",
-    component: Layout,
-    redirect: "/trade/code",
-    children: [
-      {
-        path: "code",
-        name: "TradeCode",
-        component: () => import("@/views/trade/TradeCode"),
-        meta: { title: "交易配置", icon: "form" }
-      }
-    ]
-  },
+  // {
+  //   path: "/trade",
+  //   component: Layout,
+  //   redirect: "/trade/code",
+  //   children: [
+  //     {
+  //       path: "code",
+  //       name: "TradeCode",
+  //       component: () => import("@/views/trade/TradeCode"),
+  //       meta: { title: "交易配置", icon: "form" }
+  //     }
+  //   ]
+  // },
 
   // {
   //   path: '/example',
