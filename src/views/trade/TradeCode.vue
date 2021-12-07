@@ -5,7 +5,7 @@
         type="primary"
         style="position: absolute; right: 0; top: -5px"
         @click="save"
-        >保存
+      >保存
       </el-button>
     </div>
     <codemirror
@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import { getTrades, setTrades } from '@/api/trade'
+import { getConfig, setConfig } from '@/api/trade'
 import { codemirror } from 'vue-codemirror'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/javascript/javascript.js' // 支持JavaScript语言
@@ -89,8 +89,8 @@ export default {
   methods: {
     async fetchData() {
       this.listLoading = true
-      const { data } = await getTrades()
-      this.code = JSON.stringify(data.list, null, 2)
+      const { data } = await getConfig()
+      this.code = data.content
       this.listLoading = false
     },
     onCmReady(cm) {
@@ -105,24 +105,13 @@ export default {
     },
     async save() {
       this.$confirm(`此操作不可恢复，确认要保存吗？`)
-        .then(() => {
-          let trades
+        .then(async() => {
           try {
-            trades = JSON.parse(this.code)
+            await setConfig({ code: this.code })
+            this.$message({ message: '修改成功', type: 'success' })
           } catch (e) {
-            this.$message({ message: 'json格式不正确，请检查', type: 'error' })
-            return
+            this.$message({ message: '网络错误，修改失败', type: 'error' })
           }
-          ;(async () => {
-            try {
-              await setTrades({
-                trades,
-              })
-              this.$message({ message: '修改成功', type: 'success' })
-            } catch (e) {
-              this.$message({ message: '网络错误，修改失败', type: 'error' })
-            }
-          })()
         })
         .catch(() => {})
     },

@@ -24,12 +24,20 @@ export function addFeature(data) {
   });
 }
 
-// export function getConfig() {
-//   return request({
-//     url: '/config',
-//     method: 'get',
-//   })
-// }
+export function getConfig() {
+  return request({
+    url: "/config",
+    method: "get"
+  });
+}
+
+export function setConfig(data) {
+  return request({
+    url: "/config",
+    method: "put",
+    data
+  });
+}
 
 export function startService() {
   return request({

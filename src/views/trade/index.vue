@@ -19,7 +19,7 @@
        <el-button
         type="primary"
         size="mini"
-        :loading="listLoading"
+        :loading="serviceLoading"
         @click="start()"
       >
         开启服务
@@ -27,7 +27,7 @@
        <el-button
         type="primary"
         size="mini"
-        :loading="listLoading"
+        :loading="serviceLoading"
         @click="stop()"
       >
         停止服务
@@ -81,7 +81,7 @@
           <span v-else style="color: green;">{{ scope.row.percentChange }}% </span>
         </template>
       </el-table-column>
-      <el-table-column
+      <!-- <el-table-column
         label="金额"
         align="center"
         show-overflow-tooltip
@@ -94,7 +94,7 @@
             @blur="edit(scope.row)"
           />
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="开启" align="center" width="80">
         <template slot-scope="{ row }">
           <el-switch
@@ -139,7 +139,8 @@ export default {
       list: [],
       tickets: {},
       sort: '+',
-      listLoading: true,
+      listLoading: false,
+      serviceLoading: false,
       timeId: null,
       buyAll: true,
       sellAll: true,
@@ -218,13 +219,25 @@ export default {
       await addFeature(data)
       this.dialogFormVisible = false;
     },
-    async start() {
-      await startService()
-      this.$message({ message: '开启成功', type: 'success' })
+    start() {
+      this.$confirm(`此操作不可恢复，确认要开启服务吗？`)
+        .then(async () => {
+          this.serviceLoading = true
+          await startService()
+          this.$message({ message: '开启成功', type: 'success' })
+          this.serviceLoading = false
+        })
+        .catch(() => {})
     },
-    async stop() {
-      await stopService()
-      this.$message({ message: '停止成功', type: 'success' })
+    stop() {
+       this.$confirm(`此操作不可恢复，确认要停止服务吗？`)
+        .then(async () => {
+          this.serviceLoading = true
+          await stopService()
+          this.$message({ message: '停止成功', type: 'success' })
+          this.serviceLoading = false
+        })
+        .catch(() => {})
     }
     // async changeBuyALL(status) {
     //   this.$confirm(`确认要进行此操作吗？`)
