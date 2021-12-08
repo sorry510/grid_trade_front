@@ -24,6 +24,20 @@ export function addFeature(data) {
   });
 }
 
+export function delFeature(id) {
+  return request({
+    url: `/features/${id}`,
+    method: "delete"
+  });
+}
+
+export function enableFeature(flag = 1) {
+  return request({
+    url: `/features/enable/${flag}`,
+    method: "put"
+  });
+}
+
 export function getConfig() {
   return request({
     url: "/config",

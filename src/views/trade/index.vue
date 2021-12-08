@@ -16,21 +16,37 @@
       >
         刷新
       </el-button>
-       <el-button
-        type="primary"
+      <el-button
+        type="success"
         size="mini"
         :loading="serviceLoading"
         @click="start()"
       >
         开启服务
       </el-button>
-       <el-button
-        type="primary"
+      <el-button
+        type="danger"
         size="mini"
         :loading="serviceLoading"
         @click="stop()"
       >
         停止服务
+      </el-button>
+      <el-button
+        type="success"
+        size="mini"
+        :loading="serviceLoading"
+        @click="enableAll(1)"
+      >
+        开启所有
+      </el-button>
+      <el-button
+        type="danger"
+        size="mini"
+        :loading="serviceLoading"
+        @click="enableAll(0)"
+      >
+        停用所有
       </el-button>
     </div>
     <el-table
@@ -71,14 +87,14 @@
         </template>
       </el-table-column>
       <el-table-column
-        label="24h涨跌"
+        label="24h↑↓"
         align="center"
         show-overflow-tooltip
         sortable="custom"
       >
         <template slot-scope="scope">
-          <span v-if="scope.row.percentChange < 0" style="color: red;">{{ scope.row.percentChange }}% </span>
-          <span v-else style="color: green;">{{ scope.row.percentChange }}% </span>
+          <span v-if="scope.row.percentChange < 0" style="color: red;">{{ scope.row.percentChange }}%↓ </span>
+          <span v-else style="color: green;">{{ scope.row.percentChange }}%↑ </span>
         </template>
       </el-table-column>
       <!-- <el-table-column
@@ -105,6 +121,21 @@
           />
         </template>
       </el-table-column>
+      <el-table-column
+        label="操作"
+        align="center"
+        width="80"
+        class-name="small-padding fixed-width"
+      >
+        <template slot-scope="{row}">
+          <el-button
+            type="danger"
+            size="mini"
+            @click="del(row)"
+          >删除
+          </el-button>
+        </template>
+      </el-table-column>
     </el-table>
     <el-dialog :title="dialogTitle" :visible.sync="dialogFormVisible">
       <el-form
@@ -117,9 +148,6 @@
         <el-form-item label="币种" prop="symbol">
           <el-input v-model="info.symbol" />
         </el-form-item>
-        <el-form-item label="交易金额" prop="quantity">
-          <el-input v-model="info.quantity" />
-        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
@@ -130,7 +158,7 @@
 </template>
 
 <script>
-import { getFeatures, setFeature, addFeature, startService, stopService } from '@/api/trade'
+import { getFeatures, setFeature, addFeature, delFeature, startService, stopService, enableFeature } from '@/api/trade'
 import { round } from 'mathjs'
 
 export default {
@@ -141,6 +169,7 @@ export default {
       sort: '+',
       listLoading: false,
       serviceLoading: false,
+      enableLoading: false,
       timeId: null,
       buyAll: true,
       sellAll: true,
@@ -171,6 +200,9 @@ export default {
     clearInterval(this.timeId)
   },
   methods: {
+    round(data, num = 2) {
+      return round(data, num)
+    },
     expandChange(row, expandedRows) {
       this.expandKeys = expandedRows.map(item => item.symbol)
     },
@@ -195,8 +227,31 @@ export default {
         this.$message({ message: '修改失败', type: 'success' })
       }
     },
-    round(data, num = 2) {
-      return round(data, num)
+    del(row) {
+      this.$confirm(`确认要删除${row.symbol}吗？`)
+        .then(async() => {
+          try {
+            await delFeature(row.id)
+            this.$message({ message: '删除成功', type: 'success' })
+            await this.fetchData()
+          } catch (e) {
+            this.$message({ message: '删除失败', type: 'success' })
+          }
+        })
+        .catch(() => {})
+    },
+    enableAll(flag) {
+      this.$confirm(`确认要${flag === 1 ? '启用' : '停用'}所有吗？`)
+        .then(async() => {
+          try {
+            await enableFeature(flag)
+            this.$message({ message: '操作成功', type: 'success' })
+            await this.fetchData()
+          } catch (e) {
+            this.$message({ message: '操作失败', type: 'success' })
+          }
+        })
+        .catch(() => {})
     },
     async isChangeBuy(event, row) {
       await this.edit(row)
@@ -208,7 +263,7 @@ export default {
     async addCoin(row) {
       const data = {
         'symbol': row.symbol,
-        'quantity': row.quantity,
+        'quantity': 20,
         'percentChange': 0,
         'close': 0,
         'open': 0,
@@ -221,7 +276,7 @@ export default {
     },
     start() {
       this.$confirm(`此操作不可恢复，确认要开启服务吗？`)
-        .then(async () => {
+        .then(async() => {
           this.serviceLoading = true
           await startService()
           this.$message({ message: '开启成功', type: 'success' })
@@ -230,8 +285,8 @@ export default {
         .catch(() => {})
     },
     stop() {
-       this.$confirm(`此操作不可恢复，确认要停止服务吗？`)
-        .then(async () => {
+      this.$confirm(`此操作不可恢复，确认要停止服务吗？`)
+        .then(async() => {
           this.serviceLoading = true
           await stopService()
           this.$message({ message: '停止成功', type: 'success' })
@@ -239,29 +294,6 @@ export default {
         })
         .catch(() => {})
     }
-    // async changeBuyALL(status) {
-    //   this.$confirm(`确认要进行此操作吗？`)
-    //     .then(async() => {
-    //       await this.fetchData()
-    //       this.list.map((item) => {
-    //         item.buy_open = status
-    //         if (status === true) {
-    //           item.buy_price = 0
-    //         }
-    //       })
-    //       await this.edit()
-    //     })
-    //     .catch(() => {})
-    // },
-    // async changeSellALL(status) {
-    //   this.$confirm(`确认要进行此操作吗？`)
-    //     .then(async() => {
-    //       await this.fetchData()
-    //       this.list.map((item) => (item.sell_open = status))
-    //       await this.edit()
-    //     })
-    //     .catch(() => {})
-    // }
   },
 }
 </script>
