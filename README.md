@@ -3,6 +3,8 @@
 
 ## Build Setup
 
+!!! node 版本请保持在 v16, v18 构建会报错
+
 ```bash
 # clone the project
 git clone https://github.com/sorry510/grid_trade_front.git
