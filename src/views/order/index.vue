@@ -9,6 +9,22 @@
         class="filter-item"
         @keyup.enter.native="handleFilter"
       />
+      <el-date-picker
+        v-model="listQuery.start_time"
+        size="mini"
+        type="datetime"
+        class="filter-item"
+        placeholder="开始时间"
+        :picker-options="pickerOptions"
+      />
+      <el-date-picker
+        v-model="listQuery.end_time"
+        size="mini"
+        type="datetime"
+        class="filter-item"
+        placeholder="结束时间"
+        :picker-options="pickerOptions"
+      />
       <el-button
         size="mini"
         class="filter-item"
@@ -17,6 +33,7 @@
         :loading="listLoading"
         @click="handleFilter"
       >搜索</el-button>
+      <div style="float:right; margin-right: 10px;">当前收益: {{ allProfit }}</div>
     </div>
 
     <el-table
@@ -83,7 +100,7 @@
           {{ scope.row.amount }}
         </template>
       </el-table-column>
-      <el-table-column
+      <!-- <el-table-column
         label="价格"
         align="center"
         show-overflow-tooltip
@@ -91,7 +108,7 @@
         <template slot-scope="scope">
           {{ scope.row.avg_price }}
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column
         label="时间"
         align="center"
@@ -113,6 +130,13 @@
   </div>
 </template>
 
+<style scoped>
+.filter-item {
+  margin-right: 10px;
+}
+
+</style>
+
 <script>
 import { getOrders } from '@/api/order'
 import Pagination from '@/components/Pagination'
@@ -122,12 +146,37 @@ export default {
   components: { Pagination },
   data() {
     return {
+      pickerOptions: {
+        shortcuts: [{
+          text: '今天',
+          onClick(picker) {
+            picker.$emit('pick', new Date());
+          }
+        }, {
+          text: '昨天',
+          onClick(picker) {
+            const date = new Date();
+            date.setTime(date.getTime() - 3600 * 1000 * 24);
+            picker.$emit('pick', date);
+          }
+        }, {
+          text: '一周前',
+          onClick(picker) {
+            const date = new Date();
+            date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
+            picker.$emit('pick', date);
+          }
+        }]
+      },
       list: [],
       total: 0,
       listQuery: {
         page: 1,
         limit: 10,
         sort: '+',
+        start_time: undefined,
+        end_time: undefined,
+        symbol: undefined,
       },
       listLoading: false,
       rowKey(row) {
@@ -139,7 +188,7 @@ export default {
   computed: {
     allProfit() {
       const profit = this.list.reduce(
-        (carry, row) => carry + row.nowProfit,
+        (carry, row) => carry + Number(row.inexact_profit),
         0
       )
       return round(profit, 2)
@@ -164,7 +213,11 @@ export default {
     },
     async getList() {
       this.listLoading = true
-      const { data } = await getOrders(this.listQuery)
+      const { data } = await getOrders({
+        ...this.listQuery,
+        start_time: this.listQuery.start_time ? +(this.listQuery.start_time) : undefined,
+        end_time: this.listQuery.end_time ? +(this.listQuery.end_time) : undefined,
+      })
       this.list = data.list
       this.total = data.total
       this.listLoading = false
