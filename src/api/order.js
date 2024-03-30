@@ -7,3 +7,11 @@ export function getOrders(query = {}) {
     params: query
   });
 }
+
+export function delAllTrade() {
+  return request({
+    url: '/orders',
+    method: 'delete'
+  });
+}
+

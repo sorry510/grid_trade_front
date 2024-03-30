@@ -33,6 +33,14 @@
         :loading="listLoading"
         @click="handleFilter"
       >搜索</el-button>
+      <el-button
+        type="danger"
+        size="mini"
+        :loading="listLoading"
+        @click="deleteALl()"
+      >
+        删除所有订单
+      </el-button>
       <div style="float:right; margin-right: 10px;">当前收益: {{ allProfit }}</div>
     </div>
 
@@ -138,7 +146,7 @@
 </style>
 
 <script>
-import { getOrders } from '@/api/order'
+import { getOrders, delAllTrade } from '@/api/order'
 import Pagination from '@/components/Pagination'
 import { round } from 'mathjs'
 
@@ -218,14 +226,27 @@ export default {
         start_time: this.listQuery.start_time ? +(this.listQuery.start_time) : undefined,
         end_time: this.listQuery.end_time ? +(this.listQuery.end_time) : undefined,
       })
-      this.list = data.list
+      this.list = data.list ?? []
       this.total = data.total
       this.listLoading = false
     },
     handleFilter() {
       this.listQuery.page = 1
       this.getList()
-    }
+    },
+    deleteALl() {
+      this.$confirm(`确认要删除所有订单吗？`)
+        .then(async() => {
+          try {
+            await delAllTrade()
+            this.$message({ message: '操作成功', type: 'success' })
+            await this.getList()
+          } catch (e) {
+            this.$message({ message: '操作失败', type: 'success' })
+          }
+        })
+        .catch(() => {})
+    },
   },
 }
 </script>
