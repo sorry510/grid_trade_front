@@ -82,6 +82,19 @@ export const constantRoutes = [
       }
     ]
   },
+  {
+    path: '/rush',
+    component: Layout,
+    redirect: '/rush/new-coin',
+    children: [
+      {
+        path: 'new-coin',
+        name: 'RushNewCoin',
+        component: () => import('@/views/trade/NewCoin'),
+        meta: { title: '新币抢购', icon: 'table' }
+      }
+    ]
+  },
 
   // {
   //   path: '/example',

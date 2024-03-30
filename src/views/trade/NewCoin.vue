@@ -16,38 +16,6 @@
       >
         刷新
       </el-button>
-      <el-button
-        type="success"
-        size="mini"
-        :loading="serviceLoading"
-        @click="start()"
-      >
-        开启服务
-      </el-button>
-      <el-button
-        type="danger"
-        size="mini"
-        :loading="serviceLoading"
-        @click="stop()"
-      >
-        停止服务
-      </el-button>
-      <el-button
-        type="success"
-        size="mini"
-        :loading="serviceLoading"
-        @click="enableAll(1)"
-      >
-        开启所有
-      </el-button>
-      <el-button
-        type="danger"
-        size="mini"
-        :loading="serviceLoading"
-        @click="enableAll(0)"
-      >
-        停用所有
-      </el-button>
     </div>
     <el-table
       v-loading="listLoading"
@@ -78,23 +46,15 @@
         </template>
       </el-table-column>
       <el-table-column
-        label="最新价"
+        label="类型"
         align="center"
-        show-overflow-tooltip
+        width="100"
       >
         <template slot-scope="scope">
-          {{ round(scope.row.close, 4) }}
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="24h↑↓"
-        align="center"
-        show-overflow-tooltip
-        sortable="custom"
-      >
-        <template slot-scope="scope">
-          <span v-if="scope.row.percentChange < 0" style="color: red;">{{ scope.row.percentChange }}%↓ </span>
-          <span v-else style="color: green;">{{ scope.row.percentChange }}%↑ </span>
+          <el-select v-model="scope.row.type" size="small" @change="edit(scope.row)">
+            <el-option label="币币" :value="1" />
+            <el-option label="合约" :value="2" />
+          </el-select>
         </template>
       </el-table-column>
       <el-table-column
@@ -131,6 +91,34 @@
         <template slot-scope="scope">
           <el-input
             v-model="scope.row.leverage"
+            class="edit-input"
+            size="small"
+            @blur="edit(scope.row)"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="价格精度"
+        align="center"
+        width="100"
+      >
+        <template slot-scope="scope">
+          <el-input
+            v-model="scope.row.tickSize"
+            class="edit-input"
+            size="small"
+            @blur="edit(scope.row)"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="数量精度"
+        align="center"
+        width="100"
+      >
+        <template slot-scope="scope">
+          <el-input
+            v-model="scope.row.stepSize"
             class="edit-input"
             size="small"
             @blur="edit(scope.row)"
@@ -184,7 +172,7 @@
 </template>
 
 <script>
-import { getFeatures, setFeature, addFeature, delFeature, startService, stopService, enableFeature } from '@/api/trade'
+import { getFeatures, setFeature, addFeature, delFeature, enableFeature } from '@/api/rushtrade'
 import { round } from 'mathjs'
 
 export default {
@@ -209,21 +197,12 @@ export default {
       expandKeys: []
     }
   },
-  computed: {
-    allProfit() {
-      const profit = this.list.reduce(
-        (carry, row) => carry + row.nowProfit,
-        0
-      )
-      return round(profit, 2)
-    },
-  },
   async created() {
     await this.fetchData()
-    this.timeId = setInterval(() => this.fetchData(), 5 * 1000)
+    // this.timeId = setInterval(() => this.fetchData(), 5 * 1000)
   },
   beforeDestroy() {
-    clearInterval(this.timeId)
+    // clearInterval(this.timeId)
   },
   methods: {
     round(data, num = 2) {
@@ -298,28 +277,9 @@ export default {
         'updateTime': +new Date()
       }
       await addFeature(data)
+      await this.fetchData()
       this.dialogFormVisible = false;
     },
-    start() {
-      this.$confirm(`此操作不可恢复，确认要开启服务吗？`)
-        .then(async() => {
-          this.serviceLoading = true
-          await startService()
-          this.$message({ message: '开启成功', type: 'success' })
-          this.serviceLoading = false
-        })
-        .catch(() => {})
-    },
-    stop() {
-      this.$confirm(`此操作不可恢复，确认要停止服务吗？`)
-        .then(async() => {
-          this.serviceLoading = true
-          await stopService()
-          this.$message({ message: '停止成功', type: 'success' })
-          this.serviceLoading = false
-        })
-        .catch(() => {})
-    }
   },
 }
 </script>
