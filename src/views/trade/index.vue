@@ -22,7 +22,7 @@
         :loading="serviceLoading"
         @click="start()"
       >
-        开启服务
+        重启所有服务
       </el-button>
       <el-button
         type="danger"
@@ -30,7 +30,7 @@
         :loading="serviceLoading"
         @click="stop()"
       >
-        停止服务
+        停止合约服务
       </el-button>
       <el-button
         type="success"
@@ -38,7 +38,7 @@
         :loading="serviceLoading"
         @click="enableAll(1)"
       >
-        开启所有
+        启用所有币种
       </el-button>
       <el-button
         type="danger"
@@ -46,7 +46,14 @@
         :loading="serviceLoading"
         @click="enableAll(0)"
       >
-        停用所有
+        停用所有币种
+      </el-button>
+      <el-button
+        type="success"
+        size="mini"
+        @click="dialogFormVisible2 = true"
+      >
+        批量修改
       </el-button>
     </div>
     <el-table
@@ -137,6 +144,34 @@
           />
         </template>
       </el-table-column>
+      <el-table-column
+        label="止盈%"
+        align="center"
+        width="80"
+      >
+        <template slot-scope="scope">
+          <el-input
+            v-model="scope.row.profit"
+            class="edit-input"
+            size="small"
+            @blur="edit(scope.row)"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="止损%"
+        align="center"
+        width="80"
+      >
+        <template slot-scope="scope">
+          <el-input
+            v-model="scope.row.loss"
+            class="edit-input"
+            size="small"
+            @blur="edit(scope.row)"
+          />
+        </template>
+      </el-table-column>
       <el-table-column label="开启" align="center" width="80">
         <template slot-scope="{ row }">
           <el-switch
@@ -180,12 +215,36 @@
         <el-button type="primary" :loading="dialogLoading" @click="addCoin(info)">确定</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog :title="dialogTitle2" :visible.sync="dialogFormVisible2">
+      <el-form
+        ref="dataForm2"
+        :model="batchInfo"
+        label-position="left"
+        label-width="100px"
+        style="width: 400px; margin-left:50px;"
+      >
+        <el-form-item label="usdt" prop="usdt">
+          <el-input v-model="batchInfo.usdt" />
+        </el-form-item>
+        <el-form-item label="止盈%" prop="profit">
+          <el-input v-model="batchInfo.profit" />
+        </el-form-item>
+        <el-form-item label="止损%" prop="loss">
+          <el-input v-model="batchInfo.loss" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible2 = false">取消</el-button>
+        <el-button type="primary" :loading="dialogLoading2" @click="batchEdit(batchInfo)">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getFeatures, setFeature, addFeature, delFeature, startService, stopService, enableFeature } from '@/api/trade'
-import { round } from 'mathjs'
+import { getFeatures, setFeature, addFeature, delFeature, startService, stopService, enableFeature, batchEdit } from '@/api/trade'
+import { bignumber, round } from 'mathjs'
 
 export default {
   data() {
@@ -199,10 +258,20 @@ export default {
       timeId: null,
       buyAll: true,
       sellAll: true,
+
       dialogFormVisible: false,
       dialogLoading: false,
       dialogTitle: '新增币种信息',
       info: {},
+
+      dialogFormVisible2: false,
+      dialogLoading2: false,
+      dialogTitle2: '批量修改',
+      batchInfo: {
+        usdt: undefined,
+        profit: undefined,
+        loss: undefined,
+      },
       rowKey(row) {
         return row.symbol;
       },
@@ -220,7 +289,7 @@ export default {
   },
   async created() {
     await this.fetchData()
-    this.timeId = setInterval(() => this.fetchData(), 5 * 1000)
+    this.timeId = setInterval(() => this.fetchData(), 30 * 1000)
   },
   beforeDestroy() {
     clearInterval(this.timeId)
@@ -299,6 +368,20 @@ export default {
       }
       await addFeature(data)
       this.dialogFormVisible = false;
+    },
+    async batchEdit(batchInfo) {
+      try {
+        await batchEdit(batchInfo)
+        this.batchInfo = {
+          usdt: undefined,
+          profit: undefined,
+          loss: undefined,
+        }
+        this.dialogFormVisible2 = false;
+        await this.fetchData()
+      } catch (e) {
+        this.$message({ message: '修改失败', type: 'success' })
+      }
     },
     start() {
       this.$confirm(`此操作不可恢复，确认要开启服务吗？`)
