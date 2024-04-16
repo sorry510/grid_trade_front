@@ -1,59 +1,92 @@
 <template>
   <div class="app-container">
-    <div style="margin-bottom: 10px">
+    <div style="margin-bottom: 10px; display: flex;justify-content: space-between;align-items: center;">
+      <div
+        style="display: flex;flex-flow: row wrap;gap: 10px; width:75%"
+      >
+        <el-button
+          type="success"
+          size="mini"
+          @click="openDialog()"
+        >
+          新增
+        </el-button>
+        <el-button
+          type="primary"
+          size="mini"
+          :loading="listLoading"
+          @click="fetchData()"
+        >
+          刷新
+        </el-button>
+        <el-button
+          type="success"
+          size="mini"
+          :loading="serviceLoading"
+          @click="start()"
+        >
+          重启所有服务
+        </el-button>
+        <el-button
+          type="danger"
+          size="mini"
+          :loading="serviceLoading"
+          @click="stop()"
+        >
+          停止合约服务
+        </el-button>
+        <el-button
+          type="success"
+          size="mini"
+          :loading="serviceLoading"
+          @click="enableAll(1)"
+        >
+          启用所有币种
+        </el-button>
+        <el-button
+          type="danger"
+          size="mini"
+          :loading="serviceLoading"
+          @click="enableAll(0)"
+        >
+          停用所有币种
+        </el-button>
+        <el-button
+          type="success"
+          size="mini"
+          @click="dialogFormVisible2 = true"
+        >
+          批量修改
+        </el-button>
+      </div>
+      <div style="width:25%;text-align:right;">
+        总数: {{ list.length }}
+      </div>
+    </div>
+    <div style="display: flex;flex-flow: row wrap;gap: 10px; margin-bottom: 10px;">
+      <el-input
+        v-model="search.symbol"
+        placeholder="币种"
+        style="width: 150px;"
+        class="filter-item"
+        size="small"
+      />
+      <el-select v-model="search.enable" size="small" style="width: 150px;" placeholder="状态">
+        <el-option label="全部" value="" />
+        <el-option label="开启" value="1" />
+        <el-option label="关闭" value="0" />
+      </el-select>
+      <el-select v-model="search.margin_type" size="small" style="width: 150px;" placeholder="仓位类型">
+        <el-option label="全部" value="" />
+        <el-option label="逐仓" value="ISOLATED" />
+        <el-option label="全仓" value="CROSSED" />
+      </el-select>
       <el-button
         type="success"
         size="mini"
-        @click="openDialog()"
+        @click="fetchData"
       >
-        新增
-      </el-button>
-      <el-button
-        type="primary"
-        size="mini"
-        :loading="listLoading"
-        @click="fetchData()"
-      >
-        刷新
-      </el-button>
-      <el-button
-        type="success"
-        size="mini"
-        :loading="serviceLoading"
-        @click="start()"
-      >
-        重启所有服务
-      </el-button>
-      <el-button
-        type="danger"
-        size="mini"
-        :loading="serviceLoading"
-        @click="stop()"
-      >
-        停止合约服务
-      </el-button>
-      <el-button
-        type="success"
-        size="mini"
-        :loading="serviceLoading"
-        @click="enableAll(1)"
-      >
-        启用所有币种
-      </el-button>
-      <el-button
-        type="danger"
-        size="mini"
-        :loading="serviceLoading"
-        @click="enableAll(0)"
-      >
-        停用所有币种
-      </el-button>
-      <el-button
-        type="success"
-        size="mini"
-        @click="dialogFormVisible2 = true"
-      >
-        批量修改
+        搜索
       </el-button>
     </div>
     <el-table
@@ -244,13 +277,12 @@
 
 <script>
 import { getFeatures, setFeature, addFeature, delFeature, startService, stopService, enableFeature, batchEdit } from '@/api/trade'
-import { bignumber, round } from 'mathjs'
+import { round } from 'mathjs'
 
 export default {
   data() {
     return {
       list: [],
-      tickets: {},
       sort: '+',
       listLoading: false,
       serviceLoading: false,
@@ -258,6 +290,11 @@ export default {
       timeId: null,
       buyAll: true,
       sellAll: true,
+      search: {
+        symbol: '',
+        enable: '',
+        margin_type: '',
+      },
 
       dialogFormVisible: false,
       dialogLoading: false,
@@ -308,7 +345,8 @@ export default {
     },
     async fetchData() {
       // this.listLoading = true
-      const { data } = await getFeatures({ sort: this.sort })
+      const search = this.search
+      const { data } = await getFeatures({ sort: this.sort, ...search })
       this.list = data.map(item => ({ ...item, enable: item.enable == 1 }))
       // this.listLoading = false
     },
