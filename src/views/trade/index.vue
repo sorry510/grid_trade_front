@@ -257,8 +257,17 @@
         label-width="100px"
         style="width: 400px; margin-left:50px;"
       >
+        <el-form-item label="模式" prop="marginType">
+          <el-select v-model="batchInfo.marginType" size="small">
+            <el-option label="逐仓" value="ISOLATED" />
+            <el-option label="全仓" value="CROSSED" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="usdt" prop="usdt">
           <el-input v-model="batchInfo.usdt" />
+        </el-form-item>
+        <el-form-item label="倍数" prop="leverage">
+          <el-input v-model="batchInfo.leverage" />
         </el-form-item>
         <el-form-item label="止盈%" prop="profit">
           <el-input v-model="batchInfo.profit" />

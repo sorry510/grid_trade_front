@@ -46,6 +46,18 @@
         </template>
       </el-table-column>
       <el-table-column
+        label="买卖类型"
+        align="center"
+        width="100"
+      >
+        <template slot-scope="scope">
+          <el-select v-model="scope.row.side" size="small" @change="edit(scope.row)">
+            <el-option label="买币" value="buy" />
+            <el-option label="卖币" value="sell" />
+          </el-select>
+        </template>
+      </el-table-column>
+      <el-table-column
         label="类型"
         align="center"
         width="100"
@@ -119,6 +131,20 @@
         <template slot-scope="scope">
           <el-input
             v-model="scope.row.stepSize"
+            class="edit-input"
+            size="small"
+            @blur="edit(scope.row)"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="卖出数量"
+        align="center"
+        width="100"
+      >
+        <template slot-scope="scope">
+          <el-input
+            v-model="scope.row.quantity"
             class="edit-input"
             size="small"
             @blur="edit(scope.row)"
