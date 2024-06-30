@@ -86,34 +86,6 @@
         </template>
       </el-table-column>
       <el-table-column
-        label="止盈价格"
-        align="center"
-        width="130"
-      >
-        <template slot-scope="scope">
-          <el-input
-            v-model="scope.row.profit_price"
-            class="edit-input"
-            size="small"
-            @blur="edit(scope.row)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column
-        label="止损价格"
-        align="center"
-        width="130"
-      >
-        <template slot-scope="scope">
-          <el-input
-            v-model="scope.row.loss_price"
-            class="edit-input"
-            size="small"
-            @blur="edit(scope.row)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column
         label="交易金额"
         align="center"
         width="100"
