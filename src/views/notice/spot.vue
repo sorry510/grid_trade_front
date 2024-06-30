@@ -17,7 +17,7 @@
         刷新
       </el-button>
       <div style="margin-top:20px;color:red;">
-        tips: 如果交易金额和交易数量同时填写,以交易数量为准,止盈价格或止损价格为 0 时代表不自动平仓
+        tips: 如果交易金额和交易数量同时填写,以交易数量为准
       </div>
     </div>
     <el-table

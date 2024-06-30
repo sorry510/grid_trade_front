@@ -153,20 +153,6 @@
           />
         </template>
       </el-table-column>
-      <el-table-column
-        label="交易数量"
-        align="center"
-        width="100"
-      >
-        <template slot-scope="scope">
-          <el-input
-            v-model="scope.row.quantity"
-            class="edit-input"
-            size="small"
-            @blur="edit(scope.row)"
-          />
-        </template>
-      </el-table-column>
       <el-table-column label="开启" align="center" width="80">
         <template slot-scope="{ row }">
           <el-switch
