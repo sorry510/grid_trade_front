@@ -21,6 +21,11 @@
       <span v-else class="red">否</span>
     </div>
     <div class="dashboard-text">
+      <span>是否开启行情监听通知信息: </span>
+      <span v-if="config.listenCoinEnable === '1'" class="green">是</span>
+      <span v-else class="red">否</span>
+    </div>
+    <div class="dashboard-text">
       <span>是否开启自动合约交易: </span>
       <span v-if="config.tradeFutureEnable === '1'" class="green">是</span>
       <span v-else class="red">否</span>

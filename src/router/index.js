@@ -123,9 +123,29 @@ export const constantRoutes = [
       },
       {
         path: 'feature',
-        name: 'featureSpot',
+        name: 'noticeFeature',
         component: () => import('@/views/notice/feature'),
         meta: { title: '合约通知' }
+      }
+    ]
+  },
+  {
+    path: '/listen',
+    component: Layout,
+    redirect: '/listen/coin',
+    meta: { title: '行情监听', icon: 'table' },
+    children: [
+      {
+        path: 'spot',
+        name: 'listenSpot',
+        component: () => import('@/views/listen/spot'),
+        meta: { title: '现货监听' }
+      },
+      {
+        path: 'feature',
+        name: 'listenFeature',
+        component: () => import('@/views/listen/feature'),
+        meta: { title: '合约监听' }
       }
     ]
   },
