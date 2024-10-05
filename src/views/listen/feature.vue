@@ -40,6 +40,18 @@
         </template>
       </el-table-column>
       <el-table-column
+        label="监听技术类型"
+        align="center"
+        width="150"
+      >
+        <template slot-scope="scope">
+          <el-select v-model="scope.row.listen_type" size="small" @change="edit(scope.row)">
+            <el-option label="k线变化" value="kline_base" />
+            <el-option label="肯纳特通道" value="kline_kc" />
+          </el-select>
+        </template>
+      </el-table-column>
+      <el-table-column
         label="k线周期"
         align="center"
         width="110"
@@ -200,9 +212,9 @@ export default {
       // this.listLoading = false
     },
     async edit(row) {
-      const { id, enable, kline_interval, notice_limit_min, change_percent } = row
+      const { id, enable, notice_limit_min, ...other } = row
       try {
-        await setListenCoin(id, { kline_interval, notice_limit_min: Number(notice_limit_min), change_percent, enable: enable ? 1 : 0 })
+        await setListenCoin(id, { notice_limit_min: Number(notice_limit_min), enable: enable ? 1 : 0, ...other })
         this.$message({ message: '修改成功', type: 'success' })
         await this.fetchData()
       } catch (e) {
