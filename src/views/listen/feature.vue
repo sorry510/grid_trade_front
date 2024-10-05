@@ -57,7 +57,7 @@
         width="110"
       >
         <template slot-scope="scope">
-          <el-select v-model="scope.row.kline_interval" size="small" @change="edit(scope.row)">
+          <el-select v-if="scope.row.listen_type === 'kline_base'" v-model="scope.row.kline_interval" size="small" @change="edit(scope.row)">
             <el-option label="1m" value="1m" />
             <el-option label="3m" value="3m" />
             <el-option label="5m" value="5m" />
@@ -73,6 +73,14 @@
             <el-option label="3d" value="3d" />
             <el-option label="1w" value="1w" />
             <el-option label="1M" value="1M" />
+          </el-select>
+          <el-select v-if="scope.row.listen_type === 'kline_kc'" v-model="scope.row.kline_interval" size="small" @change="edit(scope.row)">
+            <el-option label="15m" value="15m" />
+            <el-option label="1h" value="1h" />
+            <el-option label="4h" value="4h" />
+            <el-option label="1d" value="1d" />
+            <el-option label="3d" value="3d" />
+            <el-option label="1w" value="1w" />
           </el-select>
         </template>
       </el-table-column>
