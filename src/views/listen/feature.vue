@@ -252,7 +252,7 @@ export default {
           curve: 'smooth'
         },
         title: {
-          text: '4h',
+          text: 'kc通道',
           align: 'left'
         },
         grid: {
@@ -360,7 +360,7 @@ export default {
     },
     async getKcLineChart(row) {
       const { data } = await getKcLineChart(row.id)
-      const limit = 30
+      const limit = 50
       const kcWideHigh = {
         name: 'kc3.75-high',
         data: data.upper2.slice(0, limit).reverse().map(item => this.roundOrderPrice(item))
@@ -400,8 +400,7 @@ export default {
         this.$message({ message: '获取k线图失败', type: 'error' })
         return
       }
-      this.dialogTitleKline = row.symbol + ' kc通道';
-      this.chartOptions.title.text = row.kline_interval;
+      this.dialogTitleKline = `${row.symbol}(${row.kline_interval})`;
       this.dialogKlineVisible = true;
     },
     async addCoin(row) {
