@@ -40,6 +40,20 @@
         </template>
       </el-table-column>
       <el-table-column
+        label="kc通道"
+        align="center"
+        show-overflow-tooltip
+      >
+        <template slot-scope="scope">
+          <el-button
+            type="success"
+            size="mini"
+            @click="openKlineDialog(scope.row)"
+          >chart
+          </el-button>
+        </template>
+      </el-table-column>
+      <el-table-column
         label="监听技术类型"
         align="center"
         width="150"
@@ -165,14 +179,24 @@
         <el-button type="primary" :loading="dialogLoading" @click="addCoin(info)">确定</el-button>
       </div>
     </el-dialog>
+    <el-dialog :title="dialogTitleKline" :visible.sync="dialogKlineVisible" width="75%" center>
+      <div id="chart">
+        <apexchart type="line" height="450" :options="chartOptions" :series="series" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getListenCoins, setListenCoin, addListenCoin, delListenCoin, enableListenCoin } from '@/api/listenCoin'
+import { getListenCoins, setListenCoin, addListenCoin, delListenCoin, enableListenCoin, getKcLineChart } from '@/api/listenCoin'
+import { round } from 'mathjs'
+import VueApexCharts from 'vue-apexcharts'
 import { parseTime } from '@/utils'
 
 export default {
+  components: {
+    apexchart: VueApexCharts,
+  },
   data() {
     return {
       list: [],
@@ -183,11 +207,83 @@ export default {
       dialogFormVisible: false,
       dialogLoading: false,
       dialogTitle: '新增币种信息',
+      dialogTitleKline: '', // k线图
+      dialogKlineVisible: false,
       info: {},
       rowKey(row) {
         return row.symbol;
       },
-      expandKeys: []
+      expandKeys: [],
+
+      series: [
+        // {
+        //   name: 'High - 2013',
+        //   data: [28, 29, 33, 36, 32, 32, 33]
+        // },
+        // {
+        //   name: 'Low - 2013',
+        //   data: [12, 11, 14, 18, 17, 13, 13]
+        // }
+      ],
+      chartOptions: {
+        chart: {
+          height: 450,
+          type: 'line',
+          dropShadow: {
+            enabled: true,
+            color: '#000',
+            top: 18,
+            left: 7,
+            blur: 10,
+            opacity: 0.2
+          },
+          zoom: {
+            enabled: false
+          },
+          toolbar: {
+            show: false
+          }
+        },
+        colors: ['#77B6EA', '#545454', '#545454', '#545454', '#77B6EA', '#F56c6c'],
+        dataLabels: {
+          enabled: false,
+        },
+        stroke: {
+          curve: 'smooth'
+        },
+        title: {
+          text: '4h',
+          align: 'left'
+        },
+        grid: {
+          borderColor: '#e7e7e7',
+          row: {
+            colors: ['#f3f3f3', 'transparent'], // takes an array which will be repeated on columns
+            opacity: 0.5
+          },
+        },
+        markers: {
+          size: 1
+        },
+        // xaxis: {
+        //   categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        //   // title: {
+        //   //   text: '4h'
+        //   // }
+        // },
+        yaxis: {
+          title: {
+            text: 'price'
+          },
+        },
+        legend: {
+          position: 'top',
+          horizontalAlign: 'right',
+          floating: true,
+          offsetY: -25,
+          offsetX: -5
+        }
+      },
     }
   },
   async created() {
@@ -262,6 +358,52 @@ export default {
       this.dialogTitle = '新增币种信息';
       this.dialogFormVisible = true;
     },
+    async getKcLineChart(row) {
+      const { data } = await getKcLineChart(row.id)
+      const limit = 30
+      const kcWideHigh = {
+        name: 'kc3.75-high',
+        data: data.upper2.slice(0, limit).reverse().map(item => this.roundOrderPrice(item))
+      }
+      const kcNarrowHigh = {
+        name: 'kc2.75-high',
+        data: data.upper1.slice(0, limit).reverse().map(item => this.roundOrderPrice(item))
+      }
+      const kcNarrowMa = {
+        name: 'kc2.75-ma',
+        data: data.ma1.slice(0, limit).reverse().map(item => this.roundOrderPrice(item))
+      }
+      const kcNarrowLow = {
+        name: 'kc2.75-low',
+        data: data.lower1.slice(0, limit).reverse().map(item => this.roundOrderPrice(item))
+      }
+      const kcWideLow = {
+        name: 'kc3.75-low',
+        data: data.lower2.slice(0, limit).reverse().map(item => this.roundOrderPrice(item))
+      }
+      const close = {
+        name: 'close',
+        data: data.close1.slice(0, limit).reverse().map(item => this.roundOrderPrice(item))
+      }
+      this.series = []
+      this.series.push(kcWideHigh)
+      this.series.push(kcWideLow)
+      this.series.push(kcNarrowHigh)
+      this.series.push(kcNarrowMa)
+      this.series.push(kcNarrowLow)
+      this.series.push(close)
+    },
+    async openKlineDialog(row) {
+      try {
+        await this.getKcLineChart(row)
+      } catch (e) {
+        this.$message({ message: '获取k线图失败', type: 'error' })
+        return
+      }
+      this.dialogTitleKline = row.symbol + ' kc通道';
+      this.chartOptions.title.text = row.kline_interval;
+      this.dialogKlineVisible = true;
+    },
     async addCoin(row) {
       const data = {
         ...row,
@@ -273,6 +415,29 @@ export default {
       await this.fetchData()
       this.dialogFormVisible = false;
     },
+    roundOrderPrice(price, symbol = null) {
+      const whiteSymbols = {
+        'MKRUSDT': 1,
+        'CRVUSDT': 3,
+        'XTZUSDT': 3,
+      }
+      if (whiteSymbols[symbol]) {
+        return round(price, whiteSymbols[symbol])
+      }
+      if (price > 500) {
+        return round(price, 1)
+      } else if (price > 10) {
+        return round(price, 2)
+      } else if (price > 1) {
+        return round(price, 3)
+      } else if (price > 0.1) {
+        return round(price, 4)
+      } else if (price > 0.01) {
+        return round(price, 5)
+      } else {
+        return round(price, 6)
+      }
+    }
   },
 }
 </script>

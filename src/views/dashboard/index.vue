@@ -1,48 +1,22 @@
 <template>
   <div class="dashboard-container">
     <div class="dashboard-text">
-      <span>debug模式: </span>
-      <span v-if="config.debug === '1'" class="red">是</span>
-      <span v-else class="green">否</span>
-    </div>
-    <div class="dashboard-text">
-      <span>是否开启币币新币抢购: </span>
-      <span v-if="config.spotNewEnable === '1'" class="green">是</span>
-      <span v-else class="red">否</span>
-    </div>
-    <div class="dashboard-text">
-      <span>是否开启合约新币抢购: </span>
-      <span v-if="config.tradeNewEnable === '1'" class="green">是</span>
-      <span v-else class="red">否</span>
-    </div>
-    <div class="dashboard-text">
-      <span>是否开启币种通知信息: </span>
-      <span v-if="config.noticeCoinEnable === '1'" class="green">是</span>
-      <span v-else class="red">否</span>
-    </div>
-    <div class="dashboard-text">
-      <span>是否开启行情监听通知信息: </span>
-      <span v-if="config.listenCoinEnable === '1'" class="green">是</span>
-      <span v-else class="red">否</span>
-    </div>
-    <div class="dashboard-text">
-      <span>是否开启自动合约交易: </span>
-      <span v-if="config.tradeFutureEnable === '1'" class="green">是</span>
-      <span v-else class="red">否</span>
-
+      <span>合约交易: </span>
+      <span v-if="config.tradeFutureEnable === '1'" class="green">开启</span>
+      <span v-else class="red">关闭</span>
       <div style="margin-left:20px;">
         <div class="dashboard-text">
-          <span>是否允许做多: </span>
-          <span v-if="config.coinAllowLong" class="green">是</span>
-          <span v-else class="red">否</span>
+          <span>允许做多: </span>
+          <span v-if="config.coinAllowLong" class="green">开启</span>
+          <span v-else class="red">关闭</span>
         </div>
         <div class="dashboard-text">
-          <span>是否允许做空: </span>
-          <span v-if="config.coinAllowShort" class="green">是</span>
-          <span v-else class="red">否</span>
+          <span>允许做空: </span>
+          <span v-if="config.coinAllowShort" class="green">开启</span>
+          <span v-else class="red">关闭</span>
         </div>
         <div class="dashboard-text">
-          <span>自动交易策略: </span>
+          <span>交易策略: </span>
           <span class="green">{{ config.tradeStrategyTrade }}</span>
         </div>
         <div class="dashboard-text">
@@ -50,7 +24,7 @@
           <span class="green">{{ config.tradeStrategyCoin }}</span>
         </div>
         <div class="dashboard-text">
-          <span>最大持仓数量限制: </span>
+          <span>最大持仓数量: </span>
           <span class="green">{{ config.coinMaxCount }}</span>
         </div>
         <div class="dashboard-text">
@@ -58,12 +32,49 @@
           <span class="green">{{ config.coinExcludeSymbols }}</span>
         </div>
         <div class="dashboard-text">
-          <span>下单类型: </span>
-          <span class="green">{{ config.coinOrderType === 'LIMIT' ? '限价(根据价格深度取平均价挂单，有可能无法买入)' : '市价' }}</span>
+          <span>自动下单类型: </span>
+          <span class="green">{{ config.coinOrderType === 'LIMIT' ? '限价(根据价格深度取平均价挂单，挂单形式，有可能无法买入)' : '市价' }}</span>
         </div>
       </div>
     </div>
-
+    <div class="dashboard-text">
+      <span>新币抢购: </span>
+      <div style="margin-left:20px;">
+        <div class="dashboard-text">
+          <span>币币新币抢购: </span>
+          <span v-if="config.spotNewEnable === '1'" class="green">开启</span>
+          <span v-else class="red">关闭</span>
+        </div>
+        <div class="dashboard-text">
+          <span>合约新币抢购: </span>
+          <span v-if="config.tradeNewEnable === '1'" class="green">开启</span>
+          <span v-else class="red">关闭</span>
+        </div>
+      </div>
+    </div>
+    <div class="dashboard-text">
+      <span>币种通知: </span>
+      <span v-if="config.noticeCoinEnable === '1'" class="green">开启</span>
+      <span v-else class="red">关闭</span>
+    </div>
+    <div class="dashboard-text">
+      <span>行情监听: </span>
+      <span v-if="config.listenCoinEnable === '1'" class="green">开启</span>
+      <span v-else class="red">关闭</span>
+    </div>
+    <div class="dashboard-text">
+      <span>debug: </span>
+      <span v-if="config.debug === '1'" class="red" />
+      <span v-else class="green">关闭</span>
+    </div>
+    <div class="dashboard-text">
+      <span>外部链接: </span>
+      <div style="margin-left:20px;display:flex;gap: 20px;">
+        <el-link v-for="link in config.externalLinks" :key="link.title" type="primary" :underline="false" :href="link.url" target="_blank" style="font-size:30px;">
+          {{ link.title }}
+        </el-link>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -83,6 +94,11 @@ export default {
   methods: {
     async fetchConfig() {
       const { data } = await getServiceConfig()
+      try {
+        data.externalLinks = JSON.parse(data.externalLinks)
+      } catch (error) {
+        data.externalLinks = []
+      }
       console.log(data)
       this.config = data
     },

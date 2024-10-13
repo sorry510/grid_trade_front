@@ -66,20 +66,7 @@ export const constantRoutes = [
         path: 'symbols',
         name: 'Symbols',
         component: () => import('@/views/trade/index'),
-        meta: { title: '交易列表', icon: 'table' }
-      }
-    ]
-  },
-  {
-    path: '/trade',
-    component: Layout,
-    redirect: '/trade/code',
-    children: [
-      {
-        path: 'code',
-        name: 'TradeCode',
-        component: () => import('@/views/trade/TradeCode'),
-        meta: { title: '交易配置', icon: 'form' }
+        meta: { title: '合约交易', icon: 'table' }
       }
     ]
   },
@@ -92,7 +79,7 @@ export const constantRoutes = [
         path: 'list',
         name: 'OrderList',
         component: () => import('@/views/order/index'),
-        meta: { title: '交易订单', icon: 'table' }
+        meta: { title: '合约订单', icon: 'table' }
       }
     ]
   },
@@ -149,15 +136,32 @@ export const constantRoutes = [
       }
     ]
   },
-
+  {
+    path: '/trade',
+    component: Layout,
+    redirect: '/trade/code',
+    children: [
+      {
+        path: 'code',
+        name: 'TradeCode',
+        component: () => import('@/views/trade/TradeCode'),
+        meta: { title: '系统配置', icon: 'form' }
+      }
+    ]
+  },
   // {
   //   path: 'external-link',
   //   component: Layout,
+  //   meta: { title: '外部网址', icon: 'table' },
   //   children: [
   //     {
   //       path: 'http://15.152.43.227:8888/0a546a79',
-  //       meta: { title: '宝塔面板', icon: 'link' }
-  //     }
+  //       meta: { title: '宝塔面板1', icon: 'link' }
+  //     },
+  //     {
+  //       path: 'http://15.152.43.227:8888/0a546a79',
+  //       meta: { title: '宝塔面板2', icon: 'link' }
+  //     },
   //   ]
   // },
 

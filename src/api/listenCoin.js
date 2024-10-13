@@ -37,3 +37,12 @@ export function enableListenCoin(flag = 1) {
     method: 'put'
   });
 }
+
+export function getKcLineChart(id, query = {}) {
+  return request({
+    url: `/listen/coin/kc-chart/${id}`,
+    method: 'get',
+    params: query
+  });
+}
+
