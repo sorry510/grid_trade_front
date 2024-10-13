@@ -244,13 +244,13 @@ export default {
             show: false
           }
         },
-        colors: ['#77B6EA', '#545454', '#545454', '#545454', '#77B6EA', '#F56c6c'],
+        colors: ['#77B6EA', '#545454', '#545454', '#545454', '#77B6EA', '#F56c6c', '#F56c6c', '#F56c6c'],
         dataLabels: {
           enabled: false,
         },
-        stroke: {
-          curve: 'smooth'
-        },
+        // stroke: {
+        //   curve: 'smooth'
+        // },
         title: {
           text: 'kc通道',
           align: 'left'
@@ -360,6 +360,7 @@ export default {
     },
     async getKcLineChart(row) {
       const { data } = await getKcLineChart(row.id)
+      console.log(data)
       const limit = 50
       const kcWideHigh = {
         name: 'kc3.75-high',
@@ -385,18 +386,30 @@ export default {
         name: 'close',
         data: data.close1.slice(0, limit).reverse().map(item => this.roundOrderPrice(item))
       }
+      // const high = {
+      //   name: 'high',
+      //   data: data.high1.slice(0, limit).reverse().map(item => this.roundOrderPrice(item))
+      // }
+      // const low = {
+      //   name: 'low',
+      //   data: data.low1.slice(0, limit).reverse().map(item => this.roundOrderPrice(item))
+      // }
       this.series = []
       this.series.push(kcWideHigh)
       this.series.push(kcWideLow)
       this.series.push(kcNarrowHigh)
       this.series.push(kcNarrowMa)
       this.series.push(kcNarrowLow)
+
       this.series.push(close)
+      // this.series.push(high)
+      // this.series.push(low)
     },
     async openKlineDialog(row) {
       try {
         await this.getKcLineChart(row)
       } catch (e) {
+        console.log(e)
         this.$message({ message: '获取k线图失败', type: 'error' })
         return
       }
