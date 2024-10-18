@@ -137,6 +137,19 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/funding-rate',
+    component: Layout,
+    redirect: '/funding-rate',
+    children: [
+      {
+        path: 'funding-rate',
+        name: 'fundingRates',
+        component: () => import('@/views/listen/fundingRate'),
+        meta: { title: '资金费率', icon: 'table' }
+      }
+    ]
+  },
+  {
     path: '/trade',
     component: Layout,
     redirect: '/trade/code',

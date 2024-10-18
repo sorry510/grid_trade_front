@@ -63,6 +63,11 @@
       <span v-else class="red">关闭</span>
     </div>
     <div class="dashboard-text">
+      <span>合约资金费率监听: </span>
+      <span v-if="config.listenFundingRate === '1'" class="green">开启</span>
+      <span v-else class="red">关闭</span>
+    </div>
+    <div class="dashboard-text">
       <span>debug: </span>
       <span v-if="config.debug === '1'" class="red" />
       <span v-else class="green">关闭</span>

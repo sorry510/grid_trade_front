@@ -46,3 +46,18 @@ export function getKcLineChart(id, query = {}) {
   });
 }
 
+export function getFundingRates(query = {}) {
+  return request({
+    url: `/listen/funding-rates`,
+    method: 'get',
+    params: query
+  });
+}
+
+export function getFundingRateHistory(query = {}) {
+  return request({
+    url: `/listen/funding-rate/history`,
+    method: 'get',
+    params: query
+  });
+}
